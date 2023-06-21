@@ -5,8 +5,10 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Web.Http;
 
 namespace GitHubMonitorApp
 {
@@ -21,12 +23,20 @@ namespace GitHubMonitorApp
 
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var data = JsonConvert.DeserializeObject<Rootobject>(requestBody);
+            var result = new OkResult();
+            try
+            {
+                var data = JsonConvert.DeserializeObject<Rootobject>(requestBody);
+                log.LogInformation(requestBody);
+                log.LogInformation("Information about post:" + data.sender.avatar_url);
+            }
+            catch (Exception ex)
+            {
+                log.LogInformation($"Error ocurred: {ex.Message}");
+                return new InternalServerErrorResult();
+            }
 
-            log.LogInformation(requestBody);
-            log.LogInformation("Information about post:" + data.sender.avatar_url);
-
-            return new OkResult();
+            return result;
         }
     }
 }
